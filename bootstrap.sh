@@ -148,6 +148,14 @@ cat > /etc/docker/daemon.json << 'DOCKER'
 DOCKER
 systemctl restart docker
 
+# --- SSH key for GitHub ---
+echo "==> Setting up SSH key..."
+if [ ! -f ~/.ssh/id_ed25519 ]; then
+  ssh-keygen -t ed25519 -C "vps-aeza-sweden" -f ~/.ssh/id_ed25519 -N ""
+  # Accept GitHub host key
+  ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+fi
+
 # --- App directory structure ---
 echo "==> Creating app directory structure..."
 mkdir -p /opt/apps
@@ -201,11 +209,16 @@ echo "============================================"
 echo "  Bootstrap complete!"
 echo "============================================"
 echo ""
+echo "==> GitHub SSH public key (add to https://github.com/settings/ssh/new):"
+echo ""
+cat ~/.ssh/id_ed25519.pub
+echo ""
 echo "Next steps:"
-echo "  1. Add your SSH public key to ~/.ssh/authorized_keys"
-echo "  2. Reconnect via SSH to verify key auth works"
-echo "  3. Install Amnezia VPN via your Amnezia client"
-echo "  4. Start Caddy: cd /opt/apps/caddy && docker compose up -d"
-echo "  5. Add apps under /opt/apps/<appname>/ with docker-compose.yml"
+echo "  1. Add the SSH key above to your GitHub account"
+echo "  2. Add your personal SSH public key to ~/.ssh/authorized_keys"
+echo "  3. Reconnect via SSH to verify key auth works"
+echo "  4. Install Amnezia VPN via your Amnezia client"
+echo "  5. Start Caddy: cd /opt/apps/caddy && docker compose up -d"
+echo "  6. Add apps under /opt/apps/<appname>/ with docker-compose.yml"
 echo "     and add Caddyfile entries for each subdomain"
 echo ""
