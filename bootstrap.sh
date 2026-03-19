@@ -8,7 +8,7 @@ set -euo pipefail
 # What this does NOT set up (handled separately):
 #   - Amnezia VPN: reinstall via Amnezia client over SSH
 #   - App-specific containers: each app has its own docker-compose.yml
-#   - SSH authorized_keys: add your key manually or via Aeza panel
+#   - SSH authorized_keys: personal key is embedded, deploy key is generated
 # =============================================================================
 
 SWAP_SIZE="2G"
@@ -82,6 +82,22 @@ vm.swappiness = 60
 vm.overcommit_memory = 0
 SYSCTL
 sysctl --system
+
+# --- Personal SSH key (must come BEFORE SSH hardening disables passwords) ---
+echo "==> Installing personal SSH key..."
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+cat >> ~/.ssh/authorized_keys << 'AUTHKEYS'
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKG8Cg0OwewpOGWPAcllxqg8C0N9SOq1/Q47e1KllyGM wsluser@UltraMachine
+AUTHKEYS
+chmod 600 ~/.ssh/authorized_keys
+
+# --- Deploy key for GitHub Actions ---
+echo "==> Generating deploy key for CI/CD..."
+if [ ! -f ~/.ssh/deploy_key ]; then
+  ssh-keygen -t ed25519 -C "github-actions-deploy" -f ~/.ssh/deploy_key -N ""
+  cat ~/.ssh/deploy_key.pub >> ~/.ssh/authorized_keys
+fi
 
 # --- SSH hardening ---
 echo "==> Hardening SSH..."
@@ -264,12 +280,15 @@ echo "==> GitHub SSH public key (add to https://github.com/settings/ssh/new):"
 echo ""
 cat ~/.ssh/id_ed25519.pub
 echo ""
+echo "==> Deploy private key (add as VPS_DEPLOY_KEY secret in GitHub repos):"
+echo ""
+cat ~/.ssh/deploy_key
+echo ""
 echo "Next steps:"
-echo "  1. Add the SSH key above to your GitHub account"
-echo "  2. Add your personal SSH public key to ~/.ssh/authorized_keys"
+echo "  1. Add the GitHub SSH key above to https://github.com/settings/ssh/new"
+echo "  2. Copy the deploy private key above into GitHub repo secrets as VPS_DEPLOY_KEY"
 echo "  3. Reconnect via SSH to verify key auth works"
 echo "  4. Install Amnezia VPN via your Amnezia client"
 echo "  5. Start Caddy: cd /opt/apps/caddy && docker compose up -d"
-echo "  6. Add apps under /opt/apps/<appname>/ with docker-compose.yml"
-echo "     and add Caddyfile entries for each subdomain"
+echo "  6. Add apps under /opt/apps/<appname>/ and add Caddyfile entries"
 echo ""
