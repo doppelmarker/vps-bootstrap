@@ -11,6 +11,7 @@ set -euo pipefail
 #   - SSH authorized_keys: personal key is embedded, deploy key is generated
 # =============================================================================
 
+export DEBIAN_FRONTEND=noninteractive
 SWAP_SIZE="2G"
 SSH_PORT=22
 
