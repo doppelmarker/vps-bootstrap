@@ -36,18 +36,11 @@ apt-get install -y \
   gnupg \
   lsb-release
 
-# --- Docker ---
+# --- Docker (always use official Docker repo) ---
 echo "==> Installing Docker..."
-if ! command -v docker &>/dev/null; then
-  curl -fsSL https://get.docker.com | sh
-fi
+curl -fsSL https://get.docker.com | sh
 systemctl enable docker
 systemctl start docker
-
-# Install docker compose plugin if missing
-if ! docker compose version &>/dev/null; then
-  apt-get install -y docker-compose-plugin
-fi
 
 # --- Swap ---
 echo "==> Configuring swap (${SWAP_SIZE})..."
