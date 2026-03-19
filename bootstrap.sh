@@ -36,9 +36,18 @@ apt-get install -y \
   gnupg \
   lsb-release
 
-# --- Docker (always use official Docker repo) ---
+# --- Docker ---
 echo "==> Installing Docker..."
-curl -fsSL https://get.docker.com | sh
+if ! command -v docker &>/dev/null; then
+  curl -fsSL https://get.docker.com | sh
+fi
+if ! docker compose version &>/dev/null; then
+  echo "==> Installing docker compose plugin..."
+  mkdir -p /usr/local/lib/docker/cli-plugins
+  curl -fsSL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
+    -o /usr/local/lib/docker/cli-plugins/docker-compose
+  chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+fi
 systemctl enable docker
 systemctl start docker
 
