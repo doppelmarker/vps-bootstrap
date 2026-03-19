@@ -156,6 +156,10 @@ if [ ! -f ~/.ssh/id_ed25519 ]; then
   ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
 fi
 
+# --- Claude Code ---
+echo "==> Installing Claude Code..."
+curl -fsSL https://claude.ai/install.sh | bash
+
 # --- App directory structure ---
 echo "==> Creating app directory structure..."
 mkdir -p /opt/apps
