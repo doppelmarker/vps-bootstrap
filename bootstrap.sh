@@ -160,6 +160,53 @@ fi
 echo "==> Installing Claude Code..."
 curl -fsSL https://claude.ai/install.sh | bash
 
+# --- CLAUDE.md (root-level context for Claude Code) ---
+echo "==> Creating CLAUDE.md..."
+cat > /root/CLAUDE.md << 'CLAUDEMD'
+# Server Context
+
+Aeza promo VPS located in Sweden.
+
+## Specs
+
+- 1 vCPU (AMD Ryzen 9 5950X, shared/virtualized)
+- 3.8 GB RAM
+- 10 GB disk (ext4)
+- 2 GB swap
+- Ubuntu 24.04 LTS
+- KVM virtualization
+
+## Constraints
+
+- Disk space is very limited — be mindful of image sizes, build caches, and logs.
+- Single core — avoid CPU-heavy parallel builds.
+- No snapshots or backup API from hosting provider. If the server is lost, run bootstrap.sh from https://github.com/doppelmarker/vps-bootstrap to restore.
+
+## Services
+
+- **Amnezia VPN**: OpenVPN (TCP/44850) + AmneziaWG (UDP/42824). Containers managed by Amnezia client, configs stored inside containers. Do NOT modify Amnezia containers directly.
+- **Caddy**: Reverse proxy at /opt/apps/caddy/ for routing Cloudflare subdomains to app containers.
+- **Apps**: Each app lives in /opt/apps/<name>/ with its own docker-compose.yml, connected to the `web` Docker network.
+
+## Firewall (UFW)
+
+Open ports: SSH (22/tcp), OpenVPN (44850/tcp), AWG (42824/udp), HTTP (80/tcp), HTTPS (443/tcp). Everything else is denied.
+
+## Docker
+
+- All containers should use `restart: unless-stopped`.
+- Log rotation is configured globally (10m max, 3 files).
+- `live-restore: true` — containers survive dockerd restarts.
+- App containers must join the `web` network to be reachable by Caddy.
+
+## Adding a new app
+
+1. Create /opt/apps/<name>/docker-compose.yml with the app service on the `web` network.
+2. Add a reverse proxy entry in /opt/apps/caddy/Caddyfile.
+3. Point a Cloudflare subdomain A record to the server IP.
+4. `docker compose up -d` in both the app dir and caddy dir.
+CLAUDEMD
+
 # --- App directory structure ---
 echo "==> Creating app directory structure..."
 mkdir -p /opt/apps
